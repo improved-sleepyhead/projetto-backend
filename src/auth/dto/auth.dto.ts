@@ -1,6 +1,11 @@
 import { IsEmail, IsString, MinLength } from "class-validator"
 
 export class AuthDto {
+    constructor(email: string, password: string) {
+        this.email = email;
+        this.password = password;
+    }
+
     @IsEmail()
     email: string
 
