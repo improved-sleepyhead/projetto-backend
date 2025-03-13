@@ -6,6 +6,9 @@ export class AuthDto {
         this.password = password;
     }
 
+    @IsString()
+    name: string
+
     @IsEmail()
     email: string
 
