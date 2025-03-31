@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+
 import { PrismaService } from 'src/prisma.service';
 import { AuthDto } from 'src/auth/dto/auth.dto';
 import { hash } from 'argon2';
