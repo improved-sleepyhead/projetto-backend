@@ -26,6 +26,10 @@ export class UserService {
     })
   }
 
+  async getProfile(id: string) {
+    const profile = await this.getById(id)
+  }
+
   async create(dto:AuthDto){
     const user = {
       email: dto.email,
@@ -35,6 +39,21 @@ export class UserService {
 
     return this.prisma.user.create({
       data: user,
+    })
+  }
+
+  async update(id: string, dto: UserDto) {
+    let data = dto
+
+    if (dto.password) {
+      data = {...dto, password: await hash(dto.password)}
+    }
+
+    return this.prisma.user.update({
+      where: {
+        id,
+      },
+      data,
     })
   }
 }
