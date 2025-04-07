@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateProjectDto } from './dto/create-project.dto';
+import { CreateProjectDto } from './dto/project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
