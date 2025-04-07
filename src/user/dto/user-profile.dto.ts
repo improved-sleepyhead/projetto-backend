@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 
 export class UserProfileDto {
   @IsString()
@@ -10,13 +10,18 @@ export class UserProfileDto {
   @IsString()
   role: string;
 
-  @IsOptional()
-  projectsOwned?: ProjectSummary[];
+  @IsNumber()
+  totalProjects: number;
 
-  @IsOptional()
-  assignedTasks?: TaskSummary[];
+  @IsNumber()
+  assignedTasks: number;
+
+  @IsNumber()
+  completedTasks: number;
+
+  @IsNumber()
+  overdueTasks: number;
 }
-
 export class ProjectSummary {
   @IsString()
   id: string;

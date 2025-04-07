@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { hash } from 'argon2';
-import { User as PrismaUser } from '@prisma/client'; 
+import { ProjectSummary, TaskSummary, UserProfileDto } from './dto/user-profile.dto';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
 @Injectable()
 export class UserService {
@@ -32,47 +33,61 @@ export class UserService {
     });
   }
 
-  async getProfile(id: string): Promise<any> {
+  async getProfile(id: string): Promise<UserProfileDto> {
     const user = await this.getById(id);
 
     if (!user) {
       throw new Error('User not found');
     }
 
-    const totalProjects = user.projectsOwned.length;
-    const totalTasks = user.tasks.length;
-    const assignedTasks = user.tasks.filter((task) => task.assigneeId === id);
-    const completedTasks = assignedTasks.filter((task) => task.status === 'DONE').length;
-    const overdueTasks = assignedTasks.filter(
+    const totalProjects = user.projects.length;
+    const assignedTasksCount = user.tasks.length;
+    const completedTasksCount = user.tasks.filter((task) => task.status === 'DONE').length;
+    const overdueTasksCount = user.tasks.filter(
       (task) =>
         task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'DONE'
     ).length;
 
-    const projects = user.projectsOwned.map((project) => ({
-      ...project,
-      members: project.members.map((member: PrismaUser) => ({ // Явно указываем тип
-        id: member.id,
-        name: member.name,
-        email: member.email,
-      })),
-    }));
-
-    const assignedTasksList = assignedTasks.map((task) => ({
-      ...task,
-      projectName: task.project?.name || '',
-    }));
-
     return {
+      name: user.name,
+      email: user.email,
+      role: user.role,
       totalProjects,
-      totalTasks,
-      completedTasks,
-      overdueTasks,
-      projects,
-      assignedTasks: assignedTasksList,
+      assignedTasks: assignedTasksCount,
+      completedTasks: completedTasksCount,
+      overdueTasks: overdueTasksCount,
     };
   }
 
-  async create(dto: any) {
+  async getTotalTasks(id: string): Promise<TaskSummary[]> {
+    const user = await this.getById(id);
+    return user.tasks.map((task) => ({
+      id: task.id,
+      title: task.title,
+      projectId: task.projectId,
+      projectName: task.project?.name || '',
+      status: task.status,
+      dueDate: task.dueDate,
+    }));
+  }
+
+  async getProjects(id: string): Promise<ProjectSummary[]> {
+    const user = await this.getById(id);
+    return user.projects.map((project) => ({
+      id: project.id,
+      name: project.name,
+    }));
+  }
+
+  async getOwnedProjects(id: string): Promise<ProjectSummary[]> {
+    const user = await this.getById(id);
+    return user.projectsOwned.map((project) => ({
+      id: project.id,
+      name: project.name,
+    }));
+  }
+
+  async create(dto: CreateUserDto) {
     const hashedPassword = await hash(dto.password);
 
     return this.prisma.user.create({
@@ -83,7 +98,7 @@ export class UserService {
     });
   }
 
-  async update(id: string, dto: any) {
+  async update(id: string, dto: UpdateUserDto) {
     let data = dto;
 
     if (dto.password) {

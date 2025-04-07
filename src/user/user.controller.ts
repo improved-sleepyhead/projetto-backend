@@ -10,6 +10,21 @@ export class UserController {
     return this.userService.getProfile(id);
   }
 
+  @Get(':id/tasks')
+  async getTotalTasks(@Param('id') id: string) {
+    return this.userService.getTotalTasks(id);
+  }
+
+  @Get(':id/projects')
+  async getProjects(@Param('id') id: string) {
+    return this.userService.getProjects(id);
+  }
+
+  @Get(':id/owned-projects')
+  async getOwnedProjects(@Param('id') id: string) {
+    return this.userService.getOwnedProjects(id);
+  }
+
   @Post()
   async create(@Body() dto: any) {
     return this.userService.create(dto);
