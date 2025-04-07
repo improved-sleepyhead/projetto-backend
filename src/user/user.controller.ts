@@ -1,22 +1,24 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { ProjectSummary, TaskSummary, UserProfileDto } from './dto/user-profile.dto';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get(':id/profile')
-  async getProfile(@Param('id') id: string) {
+  async getProfile(@Param('id') id: string): Promise<UserProfileDto> {
     return this.userService.getProfile(id);
   }
 
   @Get(':id/tasks')
-  async getTotalTasks(@Param('id') id: string) {
+  async getTotalTasks(@Param('id') id: string): Promise<TaskSummary[]> {
     return this.userService.getTotalTasks(id);
   }
 
   @Get(':id/projects')
-  async getProjects(@Param('id') id: string) {
+  async getProjects(@Param('id') id: string): Promise<ProjectSummary[]> {
     return this.userService.getProjects(id);
   }
 
@@ -26,12 +28,12 @@ export class UserController {
   }
 
   @Post()
-  async create(@Body() dto: any) {
+  async create(@Body() dto: CreateUserDto) {
     return this.userService.create(dto);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: any) {
+  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.userService.update(id, dto);
   }
 
