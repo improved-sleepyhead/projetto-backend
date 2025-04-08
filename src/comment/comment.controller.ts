@@ -1,34 +1,57 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch, Delete, HttpCode, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Auth } from '../auth/decorators/auth.decorator';
 import { CommentService } from './comment.service';
-import { CreateCommentDto } from './dto/comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
+import { CommentDto, CreateCommentDto, UpdateCommentDto } from './dto/comment.dto';
+import { CurrentUser } from 'src/auth/decorators/user.decorator';
 
-@Controller('comment')
+@Controller('tasks/:taskId/comments')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
   @Post()
-  create(@Body() createCommentDto: CreateCommentDto) {
-    return this.commentService.create(createCommentDto);
+  @Auth()
+  @UsePipes(new ValidationPipe())
+  async create(
+    @Param('taskId') taskId: string,
+    @Body() dto: CreateCommentDto,
+    @CurrentUser('id') authorId: string,
+  ): Promise<CommentDto> {
+    return this.commentService.create(dto, authorId, taskId);
   }
 
   @Get()
-  findAll() {
-    return this.commentService.findAll();
+  @Auth()
+  async getAllByTask(@Param('taskId') taskId: string): Promise<CommentDto[]> {
+    return this.commentService.getAllByTask(taskId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.commentService.findOne(+id);
+  @Get(':commentId')
+  @Auth()
+  async getById(
+    @Param('taskId') taskId: string,
+    @Param('commentId') commentId: string,
+  ): Promise<CommentDto> {
+    return this.commentService.getById(commentId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentService.update(+id, updateCommentDto);
+  @Patch(':commentId')
+  @Auth()
+  @UsePipes(new ValidationPipe())
+  async update(
+    @Param('taskId') taskId: string,
+    @Param('commentId') commentId: string,
+    @Body() dto: UpdateCommentDto,
+  ): Promise<CommentDto> {
+    return this.commentService.update(commentId, dto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.commentService.remove(+id);
+  @Delete(':commentId')
+  @HttpCode(204)
+  @Auth()
+  async delete(
+    @Param('taskId') taskId: string,
+    @Param('commentId') commentId: string,
+  ): Promise<void> {
+    return this.commentService.delete(commentId);
   }
 }
