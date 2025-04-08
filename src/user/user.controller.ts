@@ -7,6 +7,16 @@ import { ProjectSummary, TaskSummary, UserProfileDto } from './dto/user-profile.
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get(':id')
+  async getById(@Param('id') id: string) {
+    return this.userService.getById(id);
+  }
+
+  @Get('email/:email')
+  async getByEmail(@Param('email') email: string) {
+    return this.userService.getByEmail(email);
+  }
+
   @Get(':id/profile')
   async getProfile(@Param('id') id: string): Promise<UserProfileDto> {
     return this.userService.getProfile(id);
@@ -37,8 +47,8 @@ export class UserController {
     return this.userService.update(id, dto);
   }
 
-  // @Delete(':id')
-  // async delete(@Param('id') id: string) {
-  //   return this.userService.delete(id);
-  // }
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return this.userService.delete(id);
+  }
 }
