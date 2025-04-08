@@ -1,26 +1,71 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCommentDto } from './dto/comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma.service';
+import { CommentDto, CreateCommentDto, UpdateCommentDto } from './dto/comment.dto';
 
 @Injectable()
 export class CommentService {
-  create(createCommentDto: CreateCommentDto) {
-    return 'This action adds a new comment';
+  constructor(private prisma: PrismaService) {}
+
+  async create(dto: CreateCommentDto, authorId: string, taskId: string): Promise<CommentDto> {
+    const comment = await this.prisma.comment.create({
+      data: {
+        content: dto.content,
+        author: {
+          connect: { id: authorId },
+        },
+        task: {
+          connect: { id: taskId },
+        },
+      },
+      include: {
+        author: true,
+      },
+    });
+
+    return comment;
   }
 
-  findAll() {
-    return `This action returns all comment`;
+  async getById(id: string): Promise<CommentDto> {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id },
+      include: {
+        author: true,
+      },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    return comment;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} comment`;
+  async getAllByTask(taskId: string): Promise<CommentDto[]> {
+    return this.prisma.comment.findMany({
+      where: { taskId },
+      include: {
+        author: true,
+      },
+    });
   }
 
-  update(id: number, updateCommentDto: UpdateCommentDto) {
-    return `This action updates a #${id} comment`;
+  async update(id: string, dto: UpdateCommentDto): Promise<CommentDto> {
+    const updatedComment = await this.prisma.comment.update({
+      where: { id },
+      data: {
+        content: dto.content,
+      },
+      include: {
+        author: true,
+      },
+    });
+
+    return updatedComment;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} comment`;
+  async delete(id: string): Promise<void> {
+    await this.prisma.comment.delete({
+      where: { id },
+    });
   }
 }
