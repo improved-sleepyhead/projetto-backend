@@ -12,10 +12,10 @@ export class ProjectService {
         name: dto.name,
         description: dto.description,
         owner: {
-          connect: { id: ownerId }, // Связываем проект с владельцем
+          connect: { id: ownerId },
         },
         members: {
-          connect: [{ id: ownerId }], // Добавляем владельца в список участников
+          connect: [{ id: ownerId }],
         },
       },
       include: {
@@ -114,6 +114,21 @@ export class ProjectService {
     });
 
     return this.formatProjectResponse(project);
+  }
+
+  async getAllMembers(projectId: string): Promise<any[]> {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      include: {
+        members: true,
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    return project.members;
   }
 
   private formatProjectResponse(project: any, includeTimestamps = false): ProjectDto {

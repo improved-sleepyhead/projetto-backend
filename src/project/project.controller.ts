@@ -64,4 +64,10 @@ export class ProjectController {
   ): Promise<ProjectDto> {
     return this.projectService.removeMember(projectId, userId);
   }
+
+  @Get(':projectId/members')
+  @Auth()
+  async getAllMembers(@Param('projectId') projectId: string): Promise<any[]> {
+    return this.projectService.getAllMembers(projectId);
+  }
 }
