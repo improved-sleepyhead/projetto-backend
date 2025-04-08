@@ -1,34 +1,59 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch, Delete, HttpCode, UsePipes, ValidationPipe, Query} from '@nestjs/common';
+import { Auth } from '../auth/decorators/auth.decorator';
 import { TaskService } from './task.service';
-import { CreateTaskDto } from './dto/task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
+import { CreateTaskDto, TaskDto, UpdateTaskDto } from './dto/task.dto';
 
-@Controller('task')
+@Controller('projects/:projectId/tasks')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Post()
-  create(@Body() createTaskDto: CreateTaskDto) {
-    return this.taskService.create(createTaskDto);
+  @Auth()
+  @UsePipes(new ValidationPipe())
+  async create(
+    @Param('projectId') projectId: string,
+    @Body() dto: CreateTaskDto,
+  ): Promise<TaskDto> {
+    return this.taskService.create({ ...dto, projectId });
   }
 
   @Get()
-  findAll() {
-    return this.taskService.findAll();
+  @Auth()
+  async getAllByProject(
+    @Param('projectId') projectId: string,
+    @Query('timestamps') timestamps: boolean,
+  ): Promise<TaskDto[]> {
+    return this.taskService.getAllByProject(projectId, timestamps);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.taskService.findOne(+id);
+  @Get(':taskId')
+  @Auth()
+  async getById(
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+    @Query('timestamps') timestamps: boolean,
+  ): Promise<TaskDto> {
+    return this.taskService.getById(taskId, timestamps);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-    return this.taskService.update(+id, updateTaskDto);
+  @Patch(':taskId')
+  @Auth()
+  @UsePipes(new ValidationPipe())
+  async update(
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+    @Body() dto: UpdateTaskDto,
+  ): Promise<TaskDto> {
+    return this.taskService.update(taskId, dto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taskService.remove(+id);
+  @Delete(':taskId')
+  @HttpCode(204)
+  @Auth()
+  async delete(
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+  ): Promise<void> {
+    return this.taskService.delete(taskId);
   }
 }
