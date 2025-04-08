@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { ProjectSummary, TaskSummary, UserProfileDto } from './dto/user-profile.dto';
+import { ParseIntPipe } from '@nestjs/common';
 
 @Controller('user')
 export class UserController {
@@ -15,6 +16,15 @@ export class UserController {
   @Get('email/:email')
   async getByEmail(@Param('email') email: string) {
     return this.userService.getByEmail(email);
+  }
+
+
+  @Get()
+  async getAllUsers(
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10
+  ) {
+    return this.userService.getAllUsers(page, limit);
   }
 
   @Get(':id/profile')

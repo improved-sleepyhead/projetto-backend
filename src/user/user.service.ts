@@ -33,11 +33,33 @@ export class UserService {
     });
   }
 
+  async getAllUsers(page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+  
+    return this.prisma.user.findMany({
+      skip,
+      take: limit,
+      include: {
+        tasks: {
+          include: {
+            project: true,
+          },
+        },
+        projectsOwned: {
+          include: {
+            members: true,
+          },
+        },
+        projects: true,
+      },
+    });
+  }
+
   async getProfile(id: string): Promise<UserProfileDto> {
     const user = await this.getById(id);
 
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     const totalProjects = user.projects.length;
@@ -61,6 +83,11 @@ export class UserService {
 
   async getTotalTasks(id: string): Promise<TaskSummary[]> {
     const user = await this.getById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     return user.tasks.map((task) => ({
       id: task.id,
       title: task.title,
@@ -73,6 +100,11 @@ export class UserService {
 
   async getProjects(id: string): Promise<ProjectSummary[]> {
     const user = await this.getById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     return user.projects.map((project) => ({
       id: project.id,
       name: project.name,
@@ -81,6 +113,11 @@ export class UserService {
 
   async getOwnedProjects(id: string): Promise<ProjectSummary[]> {
     const user = await this.getById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     return user.projectsOwned.map((project) => ({
       id: project.id,
       name: project.name,
@@ -104,7 +141,7 @@ export class UserService {
     if (dto.password) {
       data = { ...dto, password: await hash(dto.password) };
     }
-
+    
     return this.prisma.user.update({
       where: { id },
       data,
