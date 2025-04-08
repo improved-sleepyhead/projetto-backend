@@ -18,7 +18,11 @@ export class TaskService {
         project: {
           connect: { id: dto.projectId },
         },
-        assignee: dto.assigneeId ? { connect: { id: dto.assigneeId } } : undefined,
+        assignee: dto.assigneeId
+          ? {
+              connect: { id: dto.assigneeId }, // Связываем задачу с назначенным пользователем
+            }
+          : undefined,
       },
       include: {
         project: true,
@@ -26,7 +30,7 @@ export class TaskService {
         comments: true,
       },
     });
-
+  
     return this.formatTaskResponse(task);
   }
 

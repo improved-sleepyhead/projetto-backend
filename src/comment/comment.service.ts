@@ -11,17 +11,17 @@ export class CommentService {
       data: {
         content: dto.content,
         author: {
-          connect: { id: authorId },
+          connect: { id: authorId }, // Связываем комментарий с автором
         },
         task: {
-          connect: { id: taskId },
+          connect: { id: taskId }, // Связываем комментарий с задачей
         },
       },
       include: {
         author: true,
       },
     });
-
+  
     return comment;
   }
 

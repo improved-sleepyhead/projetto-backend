@@ -12,7 +12,10 @@ export class ProjectService {
         name: dto.name,
         description: dto.description,
         owner: {
-          connect: { id: ownerId },
+          connect: { id: ownerId }, // Связываем проект с владельцем
+        },
+        members: {
+          connect: [{ id: ownerId }], // Добавляем владельца в список участников
         },
       },
       include: {
@@ -21,7 +24,7 @@ export class ProjectService {
         tasks: true,
       },
     });
-
+  
     return this.formatProjectResponse(project);
   }
 
