@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTaskDto } from './dto/create-task.dto';
+import { CreateTaskDto } from './dto/task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
