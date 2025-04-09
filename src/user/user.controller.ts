@@ -1,15 +1,23 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { CreateUserDto, IUser, UpdateUserDto } from './dto/user.dto';
 import { ProjectSummary, TaskSummary, UserProfileDto } from './dto/user-profile.dto';
 import { ParseIntPipe } from '@nestjs/common';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { CurrentUser } from 'src/auth/decorators/user.decorator';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get('current')
+  @Auth()
+  async getCurrentUser(@CurrentUser('id') userId: string,): Promise<IUser> {
+    return this.userService.getById(userId);
+  }
+
   @Get(':id')
-  async getById(@Param('id') id: string) {
+  getById(@Param('id') id: string) {
     return this.userService.getById(id);
   }
 
@@ -17,7 +25,6 @@ export class UserController {
   async getByEmail(@Param('email') email: string) {
     return this.userService.getByEmail(email);
   }
-
 
   @Get()
   async getAllUsers(

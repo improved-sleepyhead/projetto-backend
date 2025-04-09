@@ -6,6 +6,13 @@ export enum Role {
   USER = 'USER',
 }
 
+export interface IUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'ADMIN' | 'DEVELOPER' | 'USER';
+}
+
 export class CreateUserDto {
   @IsString()
   @MinLength(3, { message: 'Name must be at least 3 characters long' })
