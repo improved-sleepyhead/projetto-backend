@@ -1,6 +1,12 @@
 import { TaskPriority, TaskStatus, User } from "@prisma/client";
 import { IsString, IsOptional, IsEnum, MinLength } from 'class-validator';
 
+export interface IUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export class CreateTaskDto {
   @IsString()
   @MinLength(3, { message: 'Title must be at least 3 characters long' })
@@ -64,7 +70,7 @@ export class TaskDto {
   priority: TaskPriority;
   dueDate?: Date;
   projectId: string;
-  assignee?: User;
+  assignee?: IUser;
   comments?: any[];
   createdAt?: Date;
   updatedAt?: Date;

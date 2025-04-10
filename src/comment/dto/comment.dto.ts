@@ -1,6 +1,12 @@
 import { IsOptional, IsString, MinLength } from 'class-validator';
 import { User } from '@prisma/client';
 
+export interface IUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export class CreateCommentDto {
   @IsString()
   @MinLength(1, { message: 'Content must not be empty' })
@@ -17,7 +23,7 @@ export class UpdateCommentDto {
 export class CommentDto {
   id: string;
   content: string;
-  author: User;
+  author: IUser;
   taskId: string;
   createdAt: Date;
 }
