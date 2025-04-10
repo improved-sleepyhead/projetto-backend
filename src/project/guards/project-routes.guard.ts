@@ -21,14 +21,15 @@ import { ProjectService } from '../project.service';
       );
   
       if (!requiredRoles) {
-        return true; // Если роли не указаны, доступ разрешен
+        return true;
       }
   
       const request = context.switchToHttp().getRequest();
-      const projectId = request.params.projectId || request.params.id; // Получаем ID проекта из параметров
-      const currentUserId = request.user?.id; // Получаем ID текущего пользователя
+      const projectId = request.params.projectId || request.params.id;
+      const currentUserId = request.user?.id;
   
       if (!projectId || !currentUserId) {
+        console.warn('Guard check failed:', { projectId, user: request.user });
         throw new ForbiddenException('Invalid request');
       }
   
@@ -40,4 +41,4 @@ import { ProjectService } from '../project.service';
   
       return true;
     }
-  }
+}

@@ -15,7 +15,12 @@ export class ProjectService {
           connect: { id: ownerId },
         },
         members: {
-          create: [{ userId: ownerId }],
+          create: [
+            {
+              userId: ownerId,
+              role: 'PROJECT_ADMIN',
+            },
+          ],
         },
       },
       include: {
