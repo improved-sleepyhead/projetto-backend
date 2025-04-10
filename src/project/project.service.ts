@@ -131,6 +131,20 @@ export class ProjectService {
     return project.members;
   }
 
+  async getUserRole(projectId: string, userId: string): Promise<string> {
+    const projectUser = await this.prisma.projectUser.findUnique({
+      where: {
+        userId_projectId: { userId, projectId },
+      },
+    });
+
+    if (!projectUser) {
+      throw new NotFoundException('User is not a member of the project');
+    }
+
+    return projectUser.role;
+  }
+
   private formatProjectResponse(project: any, includeTimestamps = false): ProjectDto {
     const { createdAt, updatedAt, ...rest } = project;
 
