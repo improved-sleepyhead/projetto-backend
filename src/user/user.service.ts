@@ -22,7 +22,11 @@ export class UserService {
             members: true,
           },
         },
-        projects: true,
+        projectRoles: {
+          include: {
+            project: true,
+          },
+        },
       },
     });
   }
@@ -35,7 +39,7 @@ export class UserService {
 
   async getAllUsers(page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
-  
+
     return this.prisma.user.findMany({
       skip,
       take: limit,
@@ -50,7 +54,11 @@ export class UserService {
             members: true,
           },
         },
-        projects: true,
+        projectRoles: {
+          include: {
+            project: true,
+          },
+        },
       },
     });
   }
@@ -62,7 +70,7 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    const totalProjects = user.projects.length;
+    const totalProjects = user.projectRoles.length;
     const assignedTasksCount = user.tasks.length;
     const completedTasksCount = user.tasks.filter((task) => task.status === 'DONE').length;
     const overdueTasksCount = user.tasks.filter(
@@ -88,7 +96,7 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    return user.tasks.map((task) => ({
+    return user.tasks.map((task: any) => ({
       id: task.id,
       title: task.title,
       projectId: task.projectId,
@@ -105,9 +113,9 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    return user.projects.map((project) => ({
-      id: project.id,
-      name: project.name,
+    return user.projectRoles.map((projectRole: any) => ({
+      id: projectRole.project.id,
+      name: projectRole.project.name,
     }));
   }
 
@@ -141,7 +149,7 @@ export class UserService {
     if (dto.password) {
       data = { ...dto, password: await hash(dto.password) };
     }
-    
+
     return this.prisma.user.update({
       where: { id },
       data,

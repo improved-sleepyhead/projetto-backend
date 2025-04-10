@@ -15,7 +15,7 @@ export class ProjectService {
           connect: { id: ownerId },
         },
         members: {
-          connect: [{ id: ownerId }],
+          create: [{ userId: ownerId }],
         },
       },
       include: {
@@ -24,7 +24,7 @@ export class ProjectService {
         tasks: true,
       },
     });
-  
+
     return this.formatProjectResponse(project);
   }
 
@@ -85,7 +85,7 @@ export class ProjectService {
       where: { id: projectId },
       data: {
         members: {
-          connect: { id: userId },
+          create: [{ userId }],
         },
       },
       include: {
@@ -94,7 +94,7 @@ export class ProjectService {
         tasks: true,
       },
     });
-
+  
     return this.formatProjectResponse(project);
   }
 
@@ -103,7 +103,7 @@ export class ProjectService {
       where: { id: projectId },
       data: {
         members: {
-          disconnect: { id: userId },
+          deleteMany: [{ userId }],
         },
       },
       include: {
@@ -112,7 +112,7 @@ export class ProjectService {
         tasks: true,
       },
     });
-
+  
     return this.formatProjectResponse(project);
   }
 

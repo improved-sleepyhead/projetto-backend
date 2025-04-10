@@ -2,7 +2,6 @@ import { IsString, IsEmail, MinLength, IsEnum, IsOptional } from 'class-validato
 
 export enum Role {
   ADMIN = 'ADMIN',
-  DEVELOPER = 'DEVELOPER',
   USER = 'USER',
 }
 
@@ -10,7 +9,7 @@ export interface IUser {
   id: string;
   name: string;
   email: string;
-  role: 'ADMIN' | 'DEVELOPER' | 'USER';
+  role: 'ADMIN' | 'USER';
 }
 
 export class CreateUserDto {
@@ -45,7 +44,7 @@ export class UpdateUserDto {
   @IsOptional()
   password?: string;
 
-  @IsEnum(Role, { message: 'Role must be one of: ADMIN, DEVELOPER, USER' })
+  @IsEnum(Role, { message: 'Role must be one of: ADMIN, USER' })
   @IsOptional()
   role?: Role;
 }

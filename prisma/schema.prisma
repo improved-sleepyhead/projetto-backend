@@ -10,13 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum Role {
-  ADMIN
-  DEVELOPER
-  USER
+  url = env("DATABASE_URL")
 }
 
 enum TaskStatus {
@@ -33,16 +27,27 @@ enum TaskPriority {
   HIGH
 }
 
+enum GlobalRole {
+  ADMIN
+  USER
+}
+
+enum ProjectRole {
+  PROJECT_ADMIN
+  MANAGER
+  DEVELOPER
+}
+
 model User {
-  id String @id @default(cuid())
+  id        String    @id @default(cuid())
   email     String    @unique
   password  String    
   name      String    
-  role      Role      @default(USER)
+  role      GlobalRole @default(USER)
 
   projectsOwned Project[] @relation("ProjectOwner")
-  projects      Project[] @relation("ProjectMembers")
-  tasks         Task[]    @relation("TaskAssignee")
+  projectRoles  ProjectUser[]
+  tasks         Task[]            @relation("TaskAssignee")
   comments      Comment[]
   tokens        Token[]
   logs          Log[]
@@ -52,33 +57,44 @@ model User {
 }
 
 model Project {
-  id String @id @default(cuid())
+  id          String           @id @default(cuid())
   name        String    
   description String?   
   
-  ownerId     String @map("owner_id")
-  owner       User      @relation("ProjectOwner", fields: [ownerId], references: [id])
+  ownerId     String            @map("owner_id")
+  owner       User              @relation("ProjectOwner", fields: [ownerId], references: [id])
 
-  members     User[]    @relation("ProjectMembers")
-
+  members     ProjectUser[]
   tasks       Task[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at") 
 }
 
+model ProjectUser {
+  userId    String     @map("user_id")
+  user      User       @relation(fields: [userId], references: [id])
+
+  projectId String     @map("project_id")
+  project   Project    @relation(fields: [projectId], references: [id])
+
+  role      ProjectRole @default(DEVELOPER)
+
+  @@id([userId, projectId])
+}
+
 model Task {
-  id String @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String    
   description String?   
   status      TaskStatus @default(TODO)
   priority    TaskPriority @default(MEDIUM)
   dueDate     DateTime?
 
-  projectId   String  @map("project_id")
+  projectId   String    @map("project_id")
   project     Project   @relation(fields: [projectId], references: [id])
 
-  assigneeId  String? @map("assignee_id")
+  assigneeId  String?   @map("assignee_id")
   assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
 
   comments    Comment[] 
