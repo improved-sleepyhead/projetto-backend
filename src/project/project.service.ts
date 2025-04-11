@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateProjectDto, ProjectDto, UpdateProjectDto } from './dto/project.dto';
+import { projectSelect } from './constants/project.constants';
 
 @Injectable()
 export class ProjectService {
@@ -23,11 +24,7 @@ export class ProjectService {
           ],
         },
       },
-      include: {
-        owner: true,
-        members: true,
-        tasks: true,
-      },
+      select: projectSelect,
     });
 
     return this.formatProjectResponse(project);
@@ -36,11 +33,7 @@ export class ProjectService {
   async getById(id: string, includeTimestamps = false): Promise<ProjectDto> {
     const project = await this.prisma.project.findUnique({
       where: { id },
-      include: {
-        owner: true,
-        members: true,
-        tasks: true,
-      },
+      select: projectSelect,
     });
 
     if (!project) {
@@ -52,11 +45,7 @@ export class ProjectService {
 
   async getAll(includeTimestamps = false): Promise<ProjectDto[]> {
     const projects = await this.prisma.project.findMany({
-      include: {
-        owner: true,
-        members: true,
-        tasks: true,
-      },
+      select: projectSelect,
     });
 
     return projects.map((project) => this.formatProjectResponse(project, includeTimestamps));
@@ -94,9 +83,7 @@ export class ProjectService {
         },
       },
       include: {
-        owner: true,
         members: true,
-        tasks: true,
       },
     });
   
@@ -112,9 +99,7 @@ export class ProjectService {
         },
       },
       include: {
-        owner: true,
         members: true,
-        tasks: true,
       },
     });
   
