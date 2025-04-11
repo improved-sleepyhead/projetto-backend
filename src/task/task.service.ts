@@ -19,7 +19,7 @@ export class TaskService {
       project: { connect: { id: projectId } },
       assignee: assigneeId ? { connect: { id: assigneeId } } : undefined,
     },
-      include: taskInclude
+      include: taskInclude,
     });
   
     return this.formatTaskResponse(task);
@@ -28,7 +28,7 @@ export class TaskService {
   async getById(id: string, timestamps = false): Promise<TaskDto> {
     const task = await this.prisma.task.findUnique({
       where: { id },
-      include: taskInclude
+      include: taskInclude,
     });
 
     if (!task) {
@@ -41,7 +41,7 @@ export class TaskService {
   async getAllByProject(projectId: string, timestamps = false): Promise<TaskDto[]> {
     const tasks = await this.prisma.task.findMany({
       where: { projectId },
-      include: taskInclude
+      include: taskInclude,
     });
 
     return tasks.map((task) => this.formatTaskResponse(task, timestamps));
@@ -58,7 +58,7 @@ export class TaskService {
         ? { connect: { id: assigneeId } }
         : { disconnect: true },
     },
-      include: taskInclude
+      include: taskInclude,
     });
 
     return this.formatTaskResponse(updatedTask);

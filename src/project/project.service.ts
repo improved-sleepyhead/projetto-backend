@@ -58,11 +58,7 @@ export class ProjectService {
         name: dto.name,
         description: dto.description,
       },
-      include: {
-        owner: true,
-        members: true,
-        tasks: true,
-      },
+      select: projectSelect,
     });
 
     return this.formatProjectResponse(updatedProject);
