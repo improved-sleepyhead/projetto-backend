@@ -26,7 +26,7 @@ export class RoleService {
         userId_projectId: { userId, projectId },
       },
       data: {
-        role: dto.role as any,
+        role: dto.role,
       },
     });
   }

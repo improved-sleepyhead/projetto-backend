@@ -1,3 +1,7 @@
+import { IsEnum } from 'class-validator';
+import { ProjectRole } from '@prisma/client';
+
 export class UpdateRoleDto {
-    role: string;
+  @IsEnum(ProjectRole)
+  role: ProjectRole;
 }
