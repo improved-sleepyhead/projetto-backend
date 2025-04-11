@@ -1,7 +1,6 @@
 import { IsOptional, IsString, MinLength } from 'class-validator';
-import { User } from '@prisma/client';
 
-export interface IUser {
+export class UserDto {
   id: string;
   name: string;
   email: string;
@@ -23,7 +22,7 @@ export class UpdateCommentDto {
 export class CommentDto {
   id: string;
   content: string;
-  author: IUser;
+  author: UserDto;
   taskId: string;
   createdAt: Date;
 }

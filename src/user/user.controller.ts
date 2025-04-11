@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto, IUser, UpdateUserDto } from './dto/user.dto';
+import { CreateUserDto, UpdateUserDto, UserDto } from './dto/user.dto';
 import { ProjectSummary, TaskSummary, UserProfileDto } from './dto/user-profile.dto';
 import { ParseIntPipe } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
@@ -12,7 +12,7 @@ export class UserController {
 
   @Get('current')
   @Auth()
-  async getCurrentUser(@CurrentUser('id') userId: string,): Promise<IUser> {
+  async getCurrentUser(@CurrentUser('id') userId: string,): Promise<UserDto> {
     return this.userService.getById(userId);
   }
 

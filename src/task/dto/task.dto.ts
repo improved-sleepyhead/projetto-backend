@@ -1,7 +1,7 @@
 import { TaskPriority, TaskStatus, User } from "@prisma/client";
 import { IsString, IsOptional, IsEnum, MinLength } from 'class-validator';
 
-export interface IUser {
+export class UserDto {
   id: string;
   name: string;
   email: string;
@@ -61,7 +61,6 @@ export class UpdateTaskDto {
     assigneeId?: string;
 }
 
-
 export class TaskDto {
   id: string;
   title: string;
@@ -70,7 +69,7 @@ export class TaskDto {
   priority: TaskPriority;
   dueDate?: Date;
   projectId: string;
-  assignee?: IUser;
+  assignee?: UserDto;
   comments?: any[];
   createdAt?: Date;
   updatedAt?: Date;

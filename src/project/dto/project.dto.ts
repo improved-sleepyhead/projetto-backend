@@ -1,6 +1,4 @@
-import { User } from '@prisma/client';
-
-export interface IUser {
+export class UserDto {
     id: string;
     name: string;
     email: string;
@@ -20,7 +18,7 @@ export class ProjectDto {
     id: string;
     name: string;
     description?: string;
-    owner: IUser;
-    members: IUser[];
+    owner: UserDto;
+    members: UserDto[];
     tasks: any[];
 }

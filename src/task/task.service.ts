@@ -2,33 +2,24 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateTaskDto, TaskDto, UpdateTaskDto } from './dto/task.dto';
 import { TaskStatus, TaskPriority } from '@prisma/client';
+import { taskInclude } from './constans/task.constans';
 
 @Injectable()
 export class TaskService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateTaskDto): Promise<TaskDto> {
+    const { projectId, assigneeId, ...rest } = dto;
+
     const task = await this.prisma.task.create({
-      data: {
-        title: dto.title,
-        description: dto.description,
-        status: dto.status || TaskStatus.TODO,
-        priority: dto.priority || TaskPriority.MEDIUM,
-        dueDate: dto.dueDate,
-        project: {
-          connect: { id: dto.projectId },
-        },
-        assignee: dto.assigneeId
-          ? {
-              connect: { id: dto.assigneeId }, // Связываем задачу с назначенным пользователем
-            }
-          : undefined,
-      },
-      include: {
-        project: true,
-        assignee: true,
-        comments: true,
-      },
+    data: {
+      ...rest,
+      status: rest.status || TaskStatus.TODO,
+      priority: rest.priority || TaskPriority.MEDIUM,
+      project: { connect: { id: projectId } },
+      assignee: assigneeId ? { connect: { id: assigneeId } } : undefined,
+    },
+      include: taskInclude
     });
   
     return this.formatTaskResponse(task);
@@ -37,11 +28,7 @@ export class TaskService {
   async getById(id: string, timestamps = false): Promise<TaskDto> {
     const task = await this.prisma.task.findUnique({
       where: { id },
-      include: {
-        project: true,
-        assignee: true,
-        comments: true,
-      },
+      include: taskInclude
     });
 
     if (!task) {
@@ -54,32 +41,24 @@ export class TaskService {
   async getAllByProject(projectId: string, timestamps = false): Promise<TaskDto[]> {
     const tasks = await this.prisma.task.findMany({
       where: { projectId },
-      include: {
-        project: true,
-        assignee: true,
-        comments: true,
-      },
+      include: taskInclude
     });
 
     return tasks.map((task) => this.formatTaskResponse(task, timestamps));
   }
 
   async update(id: string, dto: UpdateTaskDto): Promise<TaskDto> {
+    const { assigneeId, ...rest } = dto;
+
     const updatedTask = await this.prisma.task.update({
       where: { id },
       data: {
-        title: dto.title,
-        description: dto.description,
-        status: dto.status,
-        priority: dto.priority,
-        dueDate: dto.dueDate,
-        assignee: dto.assigneeId ? { connect: { id: dto.assigneeId } } : { disconnect: true },
-      },
-      include: {
-        project: true,
-        assignee: true,
-        comments: true,
-      },
+      ...rest,
+      assignee: assigneeId
+        ? { connect: { id: assigneeId } }
+        : { disconnect: true },
+    },
+      include: taskInclude
     });
 
     return this.formatTaskResponse(updatedTask);

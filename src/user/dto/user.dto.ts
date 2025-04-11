@@ -5,7 +5,7 @@ export enum Role {
   USER = 'USER',
 }
 
-export interface IUser {
+export class UserDto {
   id: string;
   name: string;
   email: string;
