@@ -1,12 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto, UserDto } from './dto/user.dto';
 import { ProjectSummary, TaskSummary, UserProfileDto } from './dto/user-profile.dto';
 import { ParseIntPipe } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { GlobalRolesGuard } from './guards/user-routes.guard';
+import { Roles } from './decorators/user.decorator';
 
 @Controller('user')
+@UseGuards(JwtAuthGuard, GlobalRolesGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -27,6 +31,8 @@ export class UserController {
   }
 
   @Get()
+  @Auth()
+  @Roles('ADMIN')
   async getAllUsers(
     @Query('page', ParseIntPipe) page: number = 1,
     @Query('limit', ParseIntPipe) limit: number = 10
