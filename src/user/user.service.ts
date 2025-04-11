@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma.service';
 import { hash } from 'argon2';
 import { ProjectSummary, TaskSummary, UserProfileDto } from './dto/user-profile.dto';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { userProjectsOwnedSelect, userTasksSelect } from './constants/user.constants';
 
 @Injectable()
 export class UserService {
@@ -11,29 +12,16 @@ export class UserService {
   async getById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
-      include: {
-        tasks: {
-          include: {
-            project: true,
-          },
-        },
-        projectsOwned: {
-          include: {
-            members: true,
-          },
-        },
-        projectRoles: {
-          include: {
-            project: true,
-          },
-        },
+      select: {
+        ...userTasksSelect,
+        projectsOwned: userProjectsOwnedSelect.projectsOwned,
       },
     });
   }
 
   getByEmail(email: string) {
     return this.prisma.user.findUnique({
-      where: { email },
+      where: { email }
     });
   }
 
@@ -43,28 +31,25 @@ export class UserService {
     return this.prisma.user.findMany({
       skip,
       take: limit,
+      select: {
+        ...userTasksSelect,
+        projectsOwned: userProjectsOwnedSelect.projectsOwned,
+      },
+    });
+  }
+
+  async getProfile(id: string): Promise<UserProfileDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
       include: {
         tasks: {
           include: {
             project: true,
           },
         },
-        projectsOwned: {
-          include: {
-            members: true,
-          },
-        },
-        projectRoles: {
-          include: {
-            project: true,
-          },
-        },
+        projectRoles: true,
       },
     });
-  }
-
-  async getProfile(id: string): Promise<UserProfileDto> {
-    const user = await this.getById(id);
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -90,13 +75,22 @@ export class UserService {
   }
 
   async getTotalTasks(id: string): Promise<TaskSummary[]> {
-    const user = await this.getById(id);
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        tasks: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return user.tasks.map((task: any) => ({
+    return user.tasks.map((task) => ({
       id: task.id,
       title: task.title,
       projectId: task.projectId,
@@ -107,20 +101,34 @@ export class UserService {
   }
 
   async getProjects(id: string): Promise<ProjectSummary[]> {
-    const user = await this.getById(id);
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        projectRoles: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return user.projectRoles.map((projectRole: any) => ({
+    return user.projectRoles.map((projectRole) => ({
       id: projectRole.project.id,
       name: projectRole.project.name,
     }));
   }
 
   async getOwnedProjects(id: string): Promise<ProjectSummary[]> {
-    const user = await this.getById(id);
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        projectsOwned: true,
+      },
+    });
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -148,6 +156,14 @@ export class UserService {
 
     if (dto.password) {
       data = { ...dto, password: await hash(dto.password) };
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
 
     return this.prisma.user.update({

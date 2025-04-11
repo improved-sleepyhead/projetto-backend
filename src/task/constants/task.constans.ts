@@ -4,14 +4,14 @@ export const projectSelect = {
     description: true,
     ownerId: true,
 };
-  
-  export const assigneeSelect = {
+
+export const assigneeSelect = {
     id: true,
     email: true,
     name: true,
 };
-  
-  export const taskInclude = {
+
+export const taskInclude = {
     project: { select: projectSelect },
     assignee: { select: assigneeSelect },
     comments: true,
