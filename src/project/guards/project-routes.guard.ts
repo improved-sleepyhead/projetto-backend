@@ -6,20 +6,20 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ProjectService } from '../project.service';
-  
-  @Injectable()
-  export class ProjectRolesGuard implements CanActivate {
+
+@Injectable()
+export class ProjectRolesGuard implements CanActivate {
     constructor(
       private readonly reflector: Reflector,
       private readonly projectService: ProjectService,
     ) {}
-  
+
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const requiredRoles = this.reflector.get<string[]>(
         'roles',
         context.getHandler(),
       );
-  
+
       if (!requiredRoles) {
         return true;
       }
