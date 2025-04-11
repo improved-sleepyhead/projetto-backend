@@ -1,26 +1,33 @@
-import { Injectable } from '@nestjs/common';
-import { CreateRoleDto } from './dto/role.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma.service';
+import { UpdateRoleDto } from './dto/role.dto';
 
 @Injectable()
 export class RoleService {
-  create(createRoleDto: CreateRoleDto) {
-    return 'This action adds a new role';
-  }
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return `This action returns all role`;
-  }
+  async updateRole(
+    projectId: string,
+    userId: string,
+    dto: UpdateRoleDto,
+  ): Promise<void> {
+    const projectUser = await this.prisma.projectUser.findUnique({
+      where: {
+        userId_projectId: { userId, projectId },
+      },
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} role`;
-  }
+    if (!projectUser) {
+      throw new NotFoundException('User is not a member of the project');
+    }
 
-  update(id: number, updateRoleDto: UpdateRoleDto) {
-    return `This action updates a #${id} role`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} role`;
+    await this.prisma.projectUser.update({
+      where: {
+        userId_projectId: { userId, projectId },
+      },
+      data: {
+        role: dto.role as any,
+      },
+    });
   }
 }
