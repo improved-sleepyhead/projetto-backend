@@ -2,10 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateProjectDto, ProjectDto, UpdateProjectDto } from './dto/project.dto';
 import { projectSelect } from './constants/project.constants';
+import * as dayjs from 'dayjs';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class ProjectService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
   async create(dto: CreateProjectDto, ownerId: string): Promise<ProjectDto> {
     const project = await this.prisma.project.create({
@@ -68,6 +73,59 @@ export class ProjectService {
     await this.prisma.project.delete({
       where: { id },
     });
+  }
+
+  async generateInviteLink(projectId: string): Promise<string> {
+    const payload = {
+      projectId,
+      expiresAt: dayjs().add(7, 'days').toISOString(),
+    };
+
+    const token = this.jwtService.sign(payload);
+    return `${process.env.BASE_URL}/projects/join/${token}`;
+  }
+
+  async joinByInviteToken(token: string, userId: string): Promise<ProjectDto> {
+    try {
+      const payload = this.jwtService.verify(token);
+
+      if (dayjs().isAfter(dayjs(payload.expiresAt))) {
+        throw new Error('Invite link has expired');
+      }
+
+      const projectId = payload.projectId;
+
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+        select: projectSelect,
+      });
+
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
+
+      const existingMember = await this.prisma.projectUser.findUnique({
+        where: {
+          userId_projectId: { userId, projectId },
+        },
+      });
+
+      if (existingMember) {
+        throw new Error('User is already a member of the project');
+      }
+
+      await this.prisma.projectUser.create({
+        data: {
+          userId,
+          projectId,
+          role: 'DEVELOPER',
+        },
+      });
+
+      return this.formatProjectResponse(project);
+    } catch (error) {
+      throw new NotFoundException('Invalid or expired invite link');
+    }
   }
 
   async addMember(projectId: string, userId: string): Promise<ProjectDto> {

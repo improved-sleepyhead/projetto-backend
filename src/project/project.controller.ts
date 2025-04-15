@@ -61,6 +61,25 @@ export class ProjectController {
     return this.projectService.addMember(projectId, userId);
   }
 
+  @Post(':projectId/invite-link')
+  @Auth()
+  @Roles('PROJECT_ADMIN', 'MANAGER')
+  async generateInviteLink(
+    @Param('projectId') projectId: string,
+  ): Promise<{ inviteLink: string }> {
+    const inviteLink = await this.projectService.generateInviteLink(projectId);
+    return { inviteLink };
+  }
+
+  @Post('accept-invite')
+  @Auth()
+  async acceptInvite(
+    @Body('token') token: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<ProjectDto> {
+    return this.projectService.joinByInviteToken(token, userId);
+  }
+
   @Delete(':projectId/members/:userId')
   @HttpCode(204)
   @Auth()
