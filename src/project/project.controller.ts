@@ -12,7 +12,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
-  
+
   @Post()
   @Auth()
   @UsePipes(new ValidationPipe())
