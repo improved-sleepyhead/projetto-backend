@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "ProjectUser" ALTER COLUMN "role" SET DEFAULT 'DEVELOPER';
