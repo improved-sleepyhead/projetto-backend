@@ -82,7 +82,7 @@ export class ProjectService {
     };
 
     const token = this.jwtService.sign(payload);
-    return `${process.env.BASE_URL}/projects/join/${token}`;
+    return `${process.env.BASE_URL}/main/projects/${projectId}/join/${token}`;
   }
 
   async joinByInviteToken(token: string, userId: string): Promise<ProjectDto> {
