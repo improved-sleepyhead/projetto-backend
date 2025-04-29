@@ -38,12 +38,38 @@ export class TaskService {
     return this.formatTaskResponse(task, timestamps);
   }
 
-  async getAllByProject(projectId: string, timestamps = false): Promise<TaskDto[]> {
+  async getAllByProject(
+    projectId: string,
+    filters: {
+      status?: TaskStatus;
+      priority?: TaskPriority;
+      assigneeId?: string;
+      search?: string;
+      dueDate?: Date;
+    },
+    timestamps = false,
+  ): Promise<TaskDto[]> {
+    const { status, priority, assigneeId, search, dueDate } = filters;
+  
+    const where = {
+      projectId,
+      status: status || undefined,
+      priority: priority || undefined,
+      assigneeId: assigneeId || undefined,
+      dueDate: dueDate ? { equals: new Date(dueDate) } : undefined,
+      OR: search
+        ? [
+            { title: { contains: search, mode: 'insensitive' as const } },
+            { description: { contains: search, mode: 'insensitive' as const } },
+          ]
+        : undefined,
+    };
+  
     const tasks = await this.prisma.task.findMany({
-      where: { projectId },
+      where,
       include: taskInclude,
     });
-
+  
     return tasks.map((task) => this.formatTaskResponse(task, timestamps));
   }
 

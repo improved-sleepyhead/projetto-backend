@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Param, Patch, Delete, HttpCode, UsePipes, ValidationPipe, Query} from '@nestjs/common';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { TaskService } from './task.service';
+import { TaskStatus, TaskPriority } from '@prisma/client';
 import { CreateTaskDto, TaskDto, UpdateTaskDto } from './dto/task.dto';
 
 @Controller('projects/:projectId/tasks')
@@ -22,8 +23,19 @@ export class TaskController {
   async getAllByProject(
     @Param('projectId') projectId: string,
     @Query('timestamps') timestamps: boolean,
+    @Query('status') status?: TaskStatus,
+    @Query('priority') priority?: TaskPriority,
+    @Query('assigneeId') assigneeId?: string,
+    @Query('search') search?: string,
+    @Query('dueDate') dueDate?: Date,
   ): Promise<TaskDto[]> {
-    return this.taskService.getAllByProject(projectId, timestamps);
+    return this.taskService.getAllByProject(projectId, {
+      status,
+      priority,
+      assigneeId,
+      search,
+      dueDate,
+    }, timestamps);
   }
 
   @Get(':taskId')
