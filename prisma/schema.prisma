@@ -93,6 +93,8 @@ model Task {
 
   comments    Comment[]     @relation("TaskComments")
 
+  position    Int           @default(0)
+
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
 }

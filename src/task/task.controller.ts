@@ -3,6 +3,7 @@ import { Auth } from '../auth/decorators/auth.decorator';
 import { TaskService } from './task.service';
 import { TaskStatus, TaskPriority } from '@prisma/client';
 import { CreateTaskDto, TaskDto, UpdateTaskDto } from './dto/task.dto';
+import { UpdateTaskOrderDto } from './dto/bulk-update.dto';
 
 @Controller('projects/:projectId/tasks')
 export class TaskController {
@@ -48,6 +49,16 @@ export class TaskController {
     return this.taskService.getById(taskId, timestamps);
   }
 
+  @Patch('order')
+  @Auth()
+  @UsePipes(new ValidationPipe())
+  async updateOrder(
+    @Param('projectId') projectId: string,
+    @Body() dto: UpdateTaskOrderDto,
+  ): Promise<void> {
+    return this.taskService.updateOrder(projectId, dto);
+  }
+
   @Patch(':taskId')
   @Auth()
   @UsePipes(new ValidationPipe())
@@ -58,6 +69,7 @@ export class TaskController {
   ): Promise<TaskDto> {
     return this.taskService.update(taskId, dto);
   }
+
 
   @Delete(':taskId')
   @HttpCode(204)

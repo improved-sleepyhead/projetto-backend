@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma.service';
 import { CreateTaskDto, TaskDto, UpdateTaskDto } from './dto/task.dto';
 import { TaskStatus, TaskPriority } from '@prisma/client';
 import { taskInclude } from './constants/task.constans';
+import { UpdateTaskOrderDto } from './dto/bulk-update.dto';
 
 @Injectable()
 export class TaskService {
@@ -88,6 +89,33 @@ export class TaskService {
     });
 
     return this.formatTaskResponse(updatedTask);
+  }
+
+  async updateOrder(
+    projectId: string,
+    dto: UpdateTaskOrderDto,
+  ): Promise<void> {
+    const { tasks } = dto;
+    
+    try {
+      await this.prisma.$transaction(
+        tasks.map(task =>
+          this.prisma.task.update({
+            where: {
+              id: task.id,
+              projectId: projectId, // Убедитесь, что задача принадлежит проекту
+            },
+            data: {
+              status: task.status,
+              position: task.position,
+            },
+          })
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update task order:', error);
+      throw new Error('Failed to update task order');
+    }
   }
 
   async delete(id: string): Promise<void> {
