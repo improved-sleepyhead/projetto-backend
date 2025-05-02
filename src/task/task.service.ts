@@ -103,7 +103,7 @@ export class TaskService {
           this.prisma.task.update({
             where: {
               id: task.id,
-              projectId: projectId, // Убедитесь, что задача принадлежит проекту
+              projectId: projectId,
             },
             data: {
               status: task.status,

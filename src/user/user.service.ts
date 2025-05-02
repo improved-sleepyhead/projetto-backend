@@ -4,6 +4,7 @@ import { hash } from 'argon2';
 import { ProjectSummary, TaskSummary, UserProfileDto } from './dto/user-profile.dto';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { userProjectsOwnedSelect, userTasksSelect } from './constants/user.constants';
+import { Prisma, TaskPriority, TaskStatus } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -74,11 +75,46 @@ export class UserService {
     };
   }
 
-  async getTotalTasks(id: string): Promise<TaskSummary[]> {
+  async getTotalTasks(
+    id: string,
+    filters?: {
+      projectId?: string;
+      status?: TaskStatus;
+      priority?: TaskPriority;
+      search?: string;
+      dueDate?: Date;
+    },
+  ): Promise<TaskSummary[]> {
+    const taskWhere: Prisma.TaskWhereInput = {};
+
+    if (filters?.projectId) {
+      taskWhere.projectId = filters.projectId;
+    }
+
+    if (filters?.status) {
+      taskWhere.status = filters.status;
+    }
+
+    if (filters?.priority) {
+      taskWhere.priority = filters.priority;
+    }
+
+    if (filters?.search) {
+      taskWhere.OR = [
+        { title: { contains: filters.search, mode: 'insensitive' as const } },
+        { description: { contains: filters.search, mode: 'insensitive' as const } },
+      ];
+    }
+
+    if (filters?.dueDate && !isNaN(filters.dueDate.getTime())) {
+      taskWhere.dueDate = { equals: new Date(filters.dueDate) };
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
         tasks: {
+          where: taskWhere,
           include: {
             project: true,
           },
@@ -96,6 +132,7 @@ export class UserService {
       projectId: task.projectId,
       projectName: task.project?.name || '',
       status: task.status,
+      priority: task.priority,
       dueDate: task.dueDate,
     }));
   }
