@@ -5,6 +5,7 @@ import { ProjectSummary, TaskSummary, UserProfileDto } from './dto/user-profile.
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { userProjectsOwnedSelect, userTasksSelect } from './constants/user.constants';
 import { Prisma, TaskPriority, TaskStatus } from '@prisma/client';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class UserService {
@@ -39,39 +40,131 @@ export class UserService {
     });
   }
 
-  async getProfile(id: string): Promise<UserProfileDto> {
+  async getProfile(userId: string): Promise<UserProfileDto> {
+    const now = dayjs();
+    const oneMonthAgo = now.subtract(30, 'days').toDate();       // Последние 30 дней
+    const twoMonthsAgo = now.subtract(60, 'days').toDate();      // Предыдущие 30 дней (от 60 до 30)
+  
+    // Получаем пользователя с проектами и задачами
     const user = await this.prisma.user.findUnique({
-      where: { id },
+      where: { id: userId },
       include: {
-        tasks: {
+        projectRoles: {
           include: {
             project: true,
           },
         },
-        projectRoles: true,
+        tasks: true,
       },
     });
-
+  
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    const totalProjects = user.projectRoles.length;
-    const assignedTasksCount = user.tasks.length;
-    const completedTasksCount = user.tasks.filter((task) => task.status === 'DONE').length;
-    const overdueTasksCount = user.tasks.filter(
-      (task) =>
-        task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'DONE'
-    ).length;
-
+  
+    // Подсчёт задач для пользователя
+    const [
+      totalTasks,
+      tasksLastMonth,
+      tasksPreviousMonth,
+  
+      assignedTasks,
+      assignedTasksLastMonth,
+      assignedTasksPreviousMonth,
+  
+      completedTasks,
+      completedTasksLastMonth,
+      completedTasksPreviousMonth,
+  
+      overdueTasks,
+      overdueTasksLastMonth,
+      overdueTasksPreviousMonth,
+    ] = await Promise.all([
+      this.prisma.task.count({ where: { assigneeId: userId } }),
+  
+      this.prisma.task.count({
+        where: {
+          assigneeId: userId,
+          createdAt: { gte: oneMonthAgo },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          assigneeId: userId,
+          createdAt: { gte: twoMonthsAgo, lt: oneMonthAgo },
+        },
+      }),
+  
+      this.prisma.task.count({
+        where: { assigneeId: userId },
+      }),
+      this.prisma.task.count({
+        where: {
+          assigneeId: userId,
+          createdAt: { gte: oneMonthAgo },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          assigneeId: userId,
+          createdAt: { gte: twoMonthsAgo, lt: oneMonthAgo },
+        },
+      }),
+  
+      this.prisma.task.count({
+        where: {
+          assigneeId: userId,
+          status: 'DONE',
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          assigneeId: userId,
+          status: 'DONE',
+          updatedAt: { gte: oneMonthAgo },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          assigneeId: userId,
+          status: 'DONE',
+          updatedAt: { gte: twoMonthsAgo, lt: oneMonthAgo },
+        },
+      }),
+  
+      this.prisma.task.count({
+        where: {
+          assigneeId: userId,
+          dueDate: { lte: now.toDate() },
+          status: { not: 'DONE' },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          assigneeId: userId,
+          dueDate: { lte: now.toDate(), gte: oneMonthAgo },
+          status: { not: 'DONE' },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          assigneeId: userId,
+          dueDate: { lte: now.toDate(), gte: twoMonthsAgo, lt: oneMonthAgo },
+          status: { not: 'DONE' },
+        },
+      }),
+    ]);
+  
     return {
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      totalProjects,
-      assignedTasks: assignedTasksCount,
-      completedTasks: completedTasksCount,
-      overdueTasks: overdueTasksCount,
+      totalProjects: user.projectRoles.length,
+      totalTasks,
+      totalTasksDifference: tasksLastMonth - tasksPreviousMonth,
+      assignedTasks,
+      assignedTasksDifference: assignedTasksLastMonth - assignedTasksPreviousMonth,
+      completedTasks,
+      completedTasksDifference: completedTasksLastMonth - completedTasksPreviousMonth,
+      overdueTasks,
+      overdueTasksDifference: overdueTasksLastMonth - overdueTasksPreviousMonth,
     };
   }
 
@@ -130,6 +223,12 @@ export class UserService {
       id: task.id,
       title: task.title,
       projectId: task.projectId,
+      project: {
+        id: task.project?.id!,
+        name: task.project?.name!,
+        description: task.project?.description ?? null,
+        ownerId: task.project?.ownerId!,
+      },
       projectName: task.project?.name || '',
       status: task.status,
       priority: task.priority,

@@ -3,7 +3,7 @@ import { Auth } from '../auth/decorators/auth.decorator';
 import { Roles } from './decorators/roles.decorator';
 
 import { ProjectService } from './project.service';
-import { CreateProjectDto, ProjectDto, UpdateProjectDto } from './dto/project.dto';
+import { CreateProjectDto, ProjectDto, ProjectStatisticsDto, UpdateProjectDto } from './dto/project.dto';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { ProjectRolesGuard } from './guards/project-routes.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -59,6 +59,14 @@ export class ProjectController {
     @Param('userId') userId: string,
   ): Promise<ProjectDto> {
     return this.projectService.addMember(projectId, userId);
+  }
+
+  @Get(':id/statistics')
+  @Auth()
+  async getProjectStatistics(
+    @Param('id') projectId: string,
+  ): Promise<ProjectStatisticsDto> {
+    return this.projectService.getStatistics(projectId);
   }
 
   @Post(':projectId/invite-link')

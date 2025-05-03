@@ -22,3 +22,17 @@ export class ProjectDto {
     members: UserDto[];
     tasks: any[];
 }
+
+export class ProjectStatisticsDto {
+    totalTasks: number;
+    assignedTasks: number;
+    completedTasks: number;
+    overdueTasks: number;
+    incompleteTasks: number;
+
+    totalTasksDifference: number;
+    assignedTasksDifference: number;
+    completedTasksDifference: number;
+    incompleteTasksDifference: number;
+    overdueTasksDifference: number;
+}

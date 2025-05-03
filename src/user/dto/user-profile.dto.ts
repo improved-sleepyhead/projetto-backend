@@ -1,27 +1,34 @@
 import { IsString, IsOptional, IsNumber } from 'class-validator';
 
 export class UserProfileDto {
-  @IsString()
-  name: string;
-
-  @IsString()
-  email: string;
-
-  @IsString()
-  role: string;
-
   @IsNumber()
   totalProjects: number;
+
+  @IsNumber()
+  totalTasks: number;
+
+  @IsNumber()
+  totalTasksDifference: number;
 
   @IsNumber()
   assignedTasks: number;
 
   @IsNumber()
+  assignedTasksDifference?: number;
+
+  @IsNumber()
   completedTasks: number;
 
   @IsNumber()
+  completedTasksDifference: number;
+
+  @IsNumber()
   overdueTasks: number;
+
+  @IsNumber()
+  overdueTasksDifference: number;
 }
+
 export class ProjectSummary {
   @IsString()
   id: string;
@@ -48,4 +55,11 @@ export class TaskSummary {
 
   @IsOptional()
   dueDate?: Date;
+
+  project: {
+    id: string;
+    name: string;
+    description: string | null;
+    ownerId: string;
+  };
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { CreateProjectDto, ProjectDto, UpdateProjectDto } from './dto/project.dto';
+import { CreateProjectDto, ProjectDto, ProjectStatisticsDto, UpdateProjectDto } from './dto/project.dto';
 import { projectSelect } from './constants/project.constants';
 import * as dayjs from 'dayjs';
 import { JwtService } from '@nestjs/jwt';
@@ -54,6 +54,142 @@ export class ProjectService {
     });
 
     return projects.map((project) => this.formatProjectResponse(project, includeTimestamps));
+  }
+
+  async getStatistics(projectId: string): Promise<ProjectStatisticsDto> {
+    const now = dayjs();
+    const oneMonthAgo = now.subtract(30, 'days').toDate();
+    const twoMonthsAgo = now.subtract(60, 'days').toDate();
+
+    const [
+      totalTasks,
+      tasksLastMonth,
+      tasksPreviousMonth,
+
+      assignedTasks,
+      assignedTasksLastMonth,
+      assignedTasksPreviousMonth,
+
+      completedTasks,
+      completedTasksLastMonth,
+      completedTasksPreviousMonth,
+
+      overdueTasks,
+      overdueTasksLastMonth,
+      overdueTasksPreviousMonth,
+
+      incompleteTasks,
+      incompleteTasksLastMonth,
+      incompleteTasksPreviousMonth,
+    ] = await Promise.all([
+      this.prisma.task.count({ where: { projectId } }),
+  
+      this.prisma.task.count({
+        where: {
+          projectId,
+          createdAt: { gte: oneMonthAgo },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          createdAt: { gte: twoMonthsAgo, lt: oneMonthAgo },
+        },
+      }),
+
+      this.prisma.task.count({
+        where: { projectId, assigneeId: { not: null } },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          assigneeId: { not: null },
+          createdAt: { gte: oneMonthAgo },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          assigneeId: { not: null },
+          createdAt: { gte: twoMonthsAgo, lt: oneMonthAgo },
+        },
+      }),
+
+      this.prisma.task.count({
+        where: { projectId, status: 'DONE' },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          status: 'DONE',
+          updatedAt: { gte: oneMonthAgo },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          status: 'DONE',
+          updatedAt: { gte: twoMonthsAgo, lt: oneMonthAgo },
+        },
+      }),
+
+      this.prisma.task.count({
+        where: {
+          projectId,
+          dueDate: { lte: now.toDate() },
+          status: { not: 'DONE' },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          dueDate: { lte: now.toDate(), gte: oneMonthAgo },
+          status: { not: 'DONE' },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          dueDate: { lte: now.toDate(), gte: twoMonthsAgo, lt: oneMonthAgo },
+          status: { not: 'DONE' },
+        },
+      }),
+
+      this.prisma.task.count({
+        where: {
+          projectId,
+          status: { not: 'DONE' },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          status: { not: 'DONE' },
+          createdAt: { gte: oneMonthAgo },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          projectId,
+          status: { not: 'DONE' },
+          createdAt: { gte: twoMonthsAgo, lt: oneMonthAgo },
+        },
+      }),
+    ]);
+
+    return {
+      totalTasks,
+      assignedTasks,
+      completedTasks,
+      overdueTasks,
+      incompleteTasks,
+  
+      totalTasksDifference: tasksLastMonth - tasksPreviousMonth,
+      assignedTasksDifference: assignedTasksLastMonth - assignedTasksPreviousMonth,
+      completedTasksDifference: completedTasksLastMonth - completedTasksPreviousMonth,
+      overdueTasksDifference: overdueTasksLastMonth - overdueTasksPreviousMonth,
+      incompleteTasksDifference: incompleteTasksLastMonth - incompleteTasksPreviousMonth,
+    };
   }
 
   async update(id: string, dto: UpdateProjectDto): Promise<ProjectDto> {
