@@ -12,6 +12,21 @@ export class ProjectService {
     private jwtService: JwtService,
   ) {}
 
+  private async ensureUserIsMember(projectId: string, userId: string): Promise<void> {
+    const member = await this.prisma.projectUser.findUnique({
+      where: {
+        userId_projectId: {
+          userId,
+          projectId,
+        },
+      },
+    });
+  
+    if (!member) {
+      throw new NotFoundException('User is not a member of the project');
+    }
+  }
+
   async create(dto: CreateProjectDto, ownerId: string): Promise<ProjectDto> {
     const project = await this.prisma.project.create({
       data: {
@@ -35,7 +50,8 @@ export class ProjectService {
     return this.formatProjectResponse(project);
   }
 
-  async getById(id: string, includeTimestamps = false): Promise<ProjectDto> {
+  async getById(id: string, userId: string, includeTimestamps = false): Promise<ProjectDto> {
+    await this.ensureUserIsMember(id, userId);
     const project = await this.prisma.project.findUnique({
       where: { id },
       select: projectSelect,

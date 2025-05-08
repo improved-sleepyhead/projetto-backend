@@ -28,8 +28,9 @@ export class ProjectController {
   async getById(
     @Param('id') id: string,
     @Query('includeTimestamps') includeTimestamps: boolean,
+    @CurrentUser('id') userId: string,
   ): Promise<ProjectDto> {
-    return this.projectService.getById(id, includeTimestamps);
+    return this.projectService.getById(id, userId, includeTimestamps);
   }
 
   @Patch(':id')
