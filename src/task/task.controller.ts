@@ -20,7 +20,7 @@ export class TaskController {
   }
 
   @Get()
-  @Auth()
+  // @Auth()
   async getAllByProject(
     @Param('projectId') projectId: string,
     @Query('timestamps') timestamps: boolean,

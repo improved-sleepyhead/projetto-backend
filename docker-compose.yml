@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: projetto_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Picpic_878787787878
+      POSTGRES_DB: projetto
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - projetto_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: projetto_backend
+    ports:
+      - "4200:4200"
+    environment:
+      BASE_URL: "http://localhost:3000"
+      DATABASE_URL: "postgresql://postgres:Picpic_878787787878@postgres:5432/projetto?schema=public"
+      JWT_SECRET: "HGJVDBCWC"
+    depends_on:
+      - postgres
+    networks:
+      - projetto_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  projetto_network:
+    driver: bridge

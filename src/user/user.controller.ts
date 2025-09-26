@@ -29,6 +29,11 @@ export class UserController {
   async getByEmail(@Param('email') email: string) {
     return this.userService.getByEmail(email);
   }
+  
+  @Get(':id/tasks')
+  async getTotalTasks(@Param('id') id: string): Promise<TaskSummary[]> {
+    return this.userService.getTotalTasks(id);
+  }
 
   @Get()
   @Auth()
@@ -45,10 +50,6 @@ export class UserController {
     return this.userService.getProfile(id);
   }
 
-  @Get(':id/tasks')
-  async getTotalTasks(@Param('id') id: string): Promise<TaskSummary[]> {
-    return this.userService.getTotalTasks(id);
-  }
 
   @Get(':id/projects')
   async getProjects(@Param('id') id: string): Promise<ProjectSummary[]> {
