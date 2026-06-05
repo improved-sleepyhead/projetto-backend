@@ -1,11 +1,12 @@
-import { Module } from '@nestjs/common';
-import { CommentService } from './comment.service';
-import { CommentController } from './comment.controller';
-import { PrismaService } from 'src/prisma.service';
+import { Module } from '@nestjs/common'
+import { CommentService } from './comment.service'
+import { CommentController } from './comment.controller'
+import { ProjectModule } from 'src/project/project.module'
 
 @Module({
-  controllers: [CommentController],
-  providers: [CommentService, PrismaService],
-  exports: [CommentService],
+	imports: [ProjectModule],
+	controllers: [CommentController],
+	providers: [CommentService],
+	exports: [CommentService]
 })
 export class CommentModule {}
