@@ -1,26 +1,35 @@
 export const ownerSelect = {
-    id: true,
-    email: true,
-    name: true,
-};
+	id: true,
+	email: true,
+	name: true
+}
+
+export const memberSelect = {
+	userId: true,
+	projectId: true,
+	role: true,
+	user: { select: ownerSelect }
+}
 
 export const taskSelect = {
-    id: true,
-    title: true,
-    description: true,
-    status: true,
-    priority: true,
-    dueDate: true,
-    projectId: true,
-    assigneeId: true,
-};
+	id: true,
+	title: true,
+	description: true,
+	status: true,
+	priority: true,
+	dueDate: true,
+	projectId: true,
+	assigneeId: true
+}
 
 export const projectSelect = {
-    id: true,
-    name: true,
-    description: true,
-    ownerId: true,
-    owner: { select: ownerSelect },
-    members: true,
-    tasks: { select: taskSelect },
-};
+	id: true,
+	name: true,
+	description: true,
+	ownerId: true,
+	createdAt: true,
+	updatedAt: true,
+	owner: { select: ownerSelect },
+	members: { select: memberSelect },
+	tasks: { select: taskSelect }
+}

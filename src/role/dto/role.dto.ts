@@ -1,7 +1,9 @@
-import { IsEnum } from 'class-validator';
-import { ProjectRole } from '@prisma/client';
+import { ApiProperty } from '@nestjs/swagger'
+import { ProjectRole } from '@prisma/client'
+import { IsEnum } from 'class-validator'
 
 export class UpdateRoleDto {
-  @IsEnum(ProjectRole)
-  role: ProjectRole;
+	@ApiProperty({ enum: ProjectRole })
+	@IsEnum(ProjectRole)
+	role: ProjectRole
 }

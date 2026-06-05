@@ -45,6 +45,8 @@ model User {
   comments      Comment[]      @relation("UserComments")
   tokens        Token[]        @relation("UserTokens")
   logs          Log[]          @relation("UserLogs")
+  invitesIssued ProjectInvite[] @relation("InviteIssuer")
+  invitesUsed   ProjectInvite[] @relation("InviteUsedBy")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -60,9 +62,12 @@ model Project {
 
   members     ProjectUser[] @relation("ProjectMembers")
   tasks       Task[]        @relation("ProjectTasks")
+  invites     ProjectInvite[] @relation("ProjectInvites")
 
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@index([ownerId])
 }
 
 model ProjectUser {
@@ -75,6 +80,7 @@ model ProjectUser {
   role      ProjectRole @default(DEVELOPER)
 
   @@id([userId, projectId])
+  @@index([projectId])
 }
 
 model Task {
@@ -97,6 +103,11 @@ model Task {
 
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([projectId, status])
+  @@index([projectId, priority])
 }
 
 model Comment {
@@ -110,6 +121,9 @@ model Comment {
   task      Task       @relation("TaskComments", fields: [taskId], references: [id], onDelete: Cascade)
 
   createdAt DateTime   @default(now()) @map("created_at")
+
+  @@index([taskId])
+  @@index([authorId])
 }
 
 model Token {
@@ -121,6 +135,8 @@ model Token {
   user      User       @relation("UserTokens", fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime   @default(now()) @map("created_at")
+
+  @@index([userId])
 }
 
 model Log {
@@ -131,4 +147,31 @@ model Log {
   user      User       @relation("UserLogs", fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime   @default(now()) @map("created_at")
+
+  @@index([userId])
+}
+
+model ProjectInvite {
+  id        String      @id @default(cuid())
+  tokenHash String     @unique @map("token_hash")
+  role      ProjectRole @default(DEVELOPER)
+
+  projectId String      @map("project_id")
+  project   Project     @relation("ProjectInvites", fields: [projectId], references: [id], onDelete: Cascade)
+
+  issuerId  String      @map("issuer_id")
+  issuer    User        @relation("InviteIssuer", fields: [issuerId], references: [id], onDelete: Cascade)
+
+  usedById  String?     @map("used_by_id")
+  usedBy    User?       @relation("InviteUsedBy", fields: [usedById], references: [id], onDelete: SetNull)
+
+  expiresAt DateTime    @map("expires_at")
+  usedAt    DateTime?   @map("used_at")
+  revokedAt DateTime?   @map("revoked_at")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  @@index([projectId])
+  @@index([issuerId])
+  @@index([usedById])
+  @@index([expiresAt])
 }

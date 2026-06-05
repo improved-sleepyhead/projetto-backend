@@ -1,109 +1,122 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/user/user.service';
-import { AuthDto } from './dto/auth.dto';
-import { verify } from 'argon2';
-import { Response } from 'express';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+	UnauthorizedException
+} from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import { verify } from 'argon2'
+import type { Response } from 'express'
+
+import { PublicUser, UserService } from 'src/user/user.service'
+
+import { LoginDto, RegisterDto } from './dto/auth.dto'
+
+interface AuthResult {
+	user: PublicUser
+	accessToken: string
+	refreshToken: string
+}
 
 @Injectable()
 export class AuthService {
-    EXPIRE_DAY_REFRESH_TOKEN = 1
-    REFRESH_TOKEN_NAME = 'refreshToken'
+	readonly EXPIRE_DAY_REFRESH_TOKEN = 1
+	readonly REFRESH_TOKEN_NAME = 'refreshToken'
 
-    constructor(
-        private jwt: JwtService,
-        private userService: UserService
-    ) {}
+	constructor(
+		private jwt: JwtService,
+		private userService: UserService
+	) {}
 
-    async login(dto: AuthDto){
-        const { password, ...user } = await this.validateUser(dto)
-        const tokens = this.issueTokens(user.id)
+	async login(dto: LoginDto): Promise<AuthResult> {
+		const user = await this.validateUser(dto)
+		const tokens = this.issueTokens(user.id)
 
-        return {
-            user,
-            ...tokens,
-        }
-    }
+		return {
+			user,
+			...tokens
+		}
+	}
 
-    async register(dto: AuthDto){
-        
-        const oldUser = await this.userService.getByEmail(dto.email)
+	async register(dto: RegisterDto): Promise<AuthResult> {
+		const oldUser = await this.userService.getByEmail(dto.email)
 
-        if (oldUser) throw new BadRequestException('User already exists')
+		if (oldUser) throw new BadRequestException('User already exists')
 
-        const { password, ...user } = await this.userService.create(dto)
+		const user = await this.userService.createPublicUser(dto)
+		const tokens = this.issueTokens(user.id)
 
-        const tokens = this.issueTokens(user.id)
+		return {
+			user,
+			...tokens
+		}
+	}
 
-        return {
-            user,
-            ...tokens,
-        }
-    }
+	async getNewTokens(refreshToken: string): Promise<AuthResult> {
+		const result = await this.jwt.verifyAsync<{ id?: string }>(refreshToken)
+		if (!result?.id) {
+			throw new UnauthorizedException('Invalid refresh token')
+		}
 
-    async getNewTokens(refreshToken: string) {
-        const result = await this.jwt.verifyAsync(refreshToken);
-        if (!result || !result.id) {
-            throw new UnauthorizedException('Invalid refresh token');
-        }
-    
-        const user = await this.userService.getById(result.id);
-        if (!user) {
-            throw new NotFoundException('User not found');
-        }
-    
-        const tokens = this.issueTokens(user.id);
-    
-        return {
-            user,
-            ...tokens,
-        };
-    }
+		const user = await this.userService.getPublicById(result.id)
+		if (!user) {
+			throw new NotFoundException('User not found')
+		}
 
-    private issueTokens(userId: string){
-        const data = {id:userId}
-        const accessToken = this.jwt.sign(data, {
-            expiresIn: '1h'
-        })
+		const tokens = this.issueTokens(user.id)
 
-        const refreshToken = this.jwt.sign(data, {
-            expiresIn: '7d'
-        })
+		return {
+			user,
+			...tokens
+		}
+	}
 
-        return { accessToken, refreshToken }
-    }
+	addRefreshTokenToResponse(res: Response, refreshToken: string): void {
+		const expiresIn = new Date()
+		expiresIn.setDate(expiresIn.getDate() + this.EXPIRE_DAY_REFRESH_TOKEN)
 
-    private async validateUser(dto:AuthDto){
-        const user = await this.userService.getByEmail(dto.email)
+		res.cookie(this.REFRESH_TOKEN_NAME, refreshToken, {
+			httpOnly: true,
+			expires: expiresIn,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+		})
+	}
 
-        if (!user) throw new NotFoundException('User not found')
+	removeRefreshTokenFromResponse(res: Response): void {
+		res.cookie(this.REFRESH_TOKEN_NAME, '', {
+			httpOnly: true,
+			expires: new Date(0),
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+		})
+	}
 
-        const isValid = await verify(user.password, dto.password)
+	private issueTokens(userId: string): {
+		accessToken: string
+		refreshToken: string
+	} {
+		const data = { id: userId }
+		const accessToken = this.jwt.sign(data, {
+			expiresIn: '1h'
+		})
 
-        if (!isValid) throw new UnauthorizedException('Invalid password')
+		const refreshToken = this.jwt.sign(data, {
+			expiresIn: '7d'
+		})
 
-        return user
-    }
+		return { accessToken, refreshToken }
+	}
 
-    addRefreshTokenToResponse(res: Response, refreshToken: string) {
-        const expiresIn = new Date()
-        expiresIn.setDate(expiresIn.getDate() + this.EXPIRE_DAY_REFRESH_TOKEN)
-        res.cookie(this.REFRESH_TOKEN_NAME, refreshToken, {
-            httpOnly: true,
-            domain: 'localhost',
-            expires: expiresIn,
-            secure: true,
-            sameSite: 'none' // заменить на lax для прода
-        })
-    }
+	private async validateUser(dto: LoginDto): Promise<PublicUser> {
+		const user = await this.userService.getByEmailWithPassword(dto.email)
 
-    removeRefreshTokenFromResponse(res: Response) {
-        res.cookie(this.REFRESH_TOKEN_NAME, '', {
-            httpOnly: true,
-            domain: 'localhost',
-            expires: new Date(0),
-            secure: true,
-            sameSite: 'none' // заменить на lax для прода
-        })
-    }
+		if (!user) throw new NotFoundException('User not found')
+
+		const isValid = await verify(user.password, dto.password)
+
+		if (!isValid) throw new UnauthorizedException('Invalid password')
+
+		return this.userService.toPublicUser(user)
+	}
 }
