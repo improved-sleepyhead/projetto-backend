@@ -1,57 +1,78 @@
-# Projetto Backend
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p>
 
-Projetto Backend is a NestJS API for a small Jira-like project tracker. It
-provides authentication, users, projects, project roles, invite links, tasks,
-task ordering, comments, and Swagger documentation.
+[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+[circleci-url]: https://circleci.com/gh/nestjs/nest
 
-The backend uses:
+  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+    <p align="center">
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
+<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
+<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
+  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
+    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+</p>
+
+## Описание
+
+Projetto Backend — это NestJS API для простого Jira-подобного трекера задач.
+Сервис отвечает за регистрацию и вход пользователей, проекты, роли участников,
+инвайт-ссылки, задачи, порядок задач на доске, комментарии и Swagger-документацию.
+
+Стек проекта:
 
 - NestJS 11
 - Prisma ORM
 - PostgreSQL
-- JWT authentication with refresh-token cookies
-- Swagger at `/api/docs`
+- JWT-аутентификация и refresh-token cookies
+- Swagger UI на `/api/docs`
 
-## Requirements
+## Требования
 
-- Docker and Docker Compose
-- Node.js 22 only if you want to run the API outside Docker
+- Docker и Docker Compose
+- Node.js 22, если нужно запускать API без Docker
 
-## Quick Start With Docker
+## Быстрый запуск через Docker
 
-Start PostgreSQL and the API:
+Поднять PostgreSQL и API:
 
 ```bash
 docker compose up --build
 ```
 
-The API will be available at:
+После запуска будут доступны:
 
-- API base URL: `http://localhost:4200/api`
+- API: `http://localhost:4200/api`
 - Swagger UI: `http://localhost:4200/api/docs`
-- PostgreSQL: `localhost:5433`
+- PostgreSQL для подключения с хоста: `localhost:5433`
 
-The app container runs these startup steps automatically:
+При старте контейнер приложения автоматически выполняет:
 
 1. `npx prisma generate`
 2. `npx prisma migrate deploy`
 3. `npm run start:dev`
 
-Stop the stack:
+Остановить контейнеры:
 
 ```bash
 docker compose down
 ```
 
-Stop the stack and remove the database volume:
+Остановить контейнеры и удалить volume базы данных:
 
 ```bash
 docker compose down -v
 ```
 
-## Environment
+## Переменные окружения
 
-Docker Compose provides development defaults:
+Docker Compose задает dev-значения по умолчанию:
 
 ```env
 PORT=4200
@@ -61,58 +82,57 @@ BASE_URL=http://localhost:4200
 DATABASE_URL=postgresql://projetto:projetto@db:5432/projetto?schema=public
 ```
 
-For non-Docker local runs, create your own `.env` with a local `DATABASE_URL` and
-`JWT_SECRET`.
+Для запуска без Docker создай свой `.env` с `DATABASE_URL` и `JWT_SECRET`.
 
-To connect to the Compose database from the host, use:
+Для подключения к базе из Compose с хоста используй:
 
 ```env
 DATABASE_URL=postgresql://projetto:projetto@localhost:5433/projetto?schema=public
 ```
 
-## Local Run Without Docker
+## Локальный запуск без Docker
 
-Install dependencies:
+Установить зависимости:
 
 ```bash
 npm install
 ```
 
-Generate Prisma Client and apply migrations:
+Сгенерировать Prisma Client и применить миграции:
 
 ```bash
 npx prisma generate
 npx prisma migrate deploy
 ```
 
-Start the API:
+Запустить API в watch mode:
 
 ```bash
 npm run start:dev
 ```
 
-## Useful Commands
+## Полезные команды
 
 ```bash
-# Run unit tests
+# Unit-тесты
 npm run test
 
-# Run e2e tests
+# E2E-тесты
 npm run test:e2e
 
-# Build production bundle
+# Production-сборка
 npm run build
 
-# Validate Prisma schema
+# Проверка Prisma-схемы
 npx prisma validate
 ```
 
-## Main Modules
+## Основные модули
 
-- `auth`: register, login, logout, JWT strategy, refresh-token cookies.
-- `user`: profile, users, user-level access checks.
-- `project`: project CRUD, memberships, roles, invite links.
-- `task`: task CRUD, filtering, status/priority, board ordering.
-- `comment`: task comments.
-- `role`: project role assignment.
-- `prisma`: PostgreSQL access through Prisma.
+- `auth`: регистрация, вход, выход, JWT strategy, refresh-token cookies.
+- `user`: профиль, пользователи, проверки доступа на уровне пользователей.
+- `project`: CRUD проектов, участники, роли, инвайт-ссылки.
+- `task`: CRUD задач, фильтры, статус, приоритет, порядок на доске.
+- `comment`: комментарии к задачам.
+- `role`: назначение ролей в проекте.
+- `prisma`: доступ к PostgreSQL через Prisma.
