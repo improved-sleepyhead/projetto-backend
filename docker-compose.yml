@@ -1,0 +1,43 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "4200:4200"
+    environment:
+      NODE_ENV: development
+      PORT: 4200
+      JWT_SECRET: dev-jwt-secret-change-me
+      BASE_URL: http://localhost:4200
+      DATABASE_URL: postgresql://projetto:projetto@db:5432/projetto?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: >
+      sh -c "npx prisma generate &&
+             npx prisma migrate deploy &&
+             npm run start:dev"
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_USER: projetto
+      POSTGRES_PASSWORD: projetto
+      POSTGRES_DB: projetto
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U projetto -d projetto"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  postgres_data:
